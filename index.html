@@ -255,24 +255,23 @@ document.getElementById("checkout-form").addEventListener("submit",async e=>{
    item.price=Number(p.price);
    item.name=p.name;
   }
-  const total=totalCart();
-  const {data:order,error:orderError}=await db.from("orders").insert({
-   customer_name:document.getElementById("customer-name").value.trim(),
-   whatsapp:document.getElementById("customer-phone").value.trim(),
-   address:document.getElementById("customer-address").value.trim(),
-   total:total,
-   status:"Menunggu konfirmasi"
-  }).select("id").single();
-  if(orderError)throw orderError;
-  const rows=cart.map(i=>({
-   order_id:order.id,product_id:i.id,quantity:i.quantity,
-   price:i.price,subtotal:i.price*i.quantity
-  }));
-  const {error:itemError}=await db.from("order_items").insert(rows);
-  if(itemError)throw itemError;
-  alert("Pesanan berhasil dikirim! Nomor pesanan: "+order.id);
-  cart=[];updateCartCount();closeModal("checkout-modal");
-  document.getElementById("checkout-form").reset();
+  const {data:orderId,error:orderError}=await db.rpc("create_order",{
+  p_customer_name:document.getElementById("customer-name").value.trim(),
+  p_whatsapp:document.getElementById("customer-phone").value.trim(),
+  p_address:document.getElementById("customer-address").value.trim(),
+  p_items:cart.map(i=>({
+    id:i.id,
+    quantity:i.quantity
+  }))
+});
+
+if(orderError)throw orderError;
+
+alert("Pesanan berhasil dikirim! Nomor pesanan: "+orderId);
+cart=[];
+updateCartCount();
+closeModal("checkout-modal");
+document.getElementById("checkout-form").reset();
  }catch(err){
   console.error(err);
   alert("Pesanan belum berhasil: "+(err.message||"Terjadi kesalahan."));
