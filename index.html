@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mochimi | Manisnya Setiap Gigitan</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; color: #493b3b; background: #fffaf8; }
+    header { padding: 20px 7%; display: flex; justify-content: space-between; align-items: center; background: white; }
+    .logo { font-size: 27px; font-weight: bold; color: #d87591; }
+    nav a { margin-left: 22px; color: #604b50; text-decoration: none; }
+    .hero { padding: 75px 8%; text-align: center; background: #fce8ed; }
+    .hero h1 { font-size: 42px; color: #b95e7b; margin-bottom: 12px; }
+    .hero p { font-size: 18px; }
+    .section { padding: 45px 7%; }
+    .section h2 { text-align: center; color: #b95e7b; }
+    .products { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 22px; margin-top: 30px; }
+    .product { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 3px 15px #00000010; }
+    .product img { width: 100%; height: 190px; object-fit: cover; border-radius: 12px; background: #f8e9ec; }
+    .product h3 { margin-bottom: 7px; }
+    .price { color: #c45e7c; font-weight: bold; }
+    button { background: #d87591; color: white; border: 0; padding: 11px 17px; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #bd5e7b; }
+    footer { padding: 25px; text-align: center; background: #fce8ed; }
+    #status { text-align: center; color: #9a6878; }
+    @media(max-width:600px) { header { flex-direction: column; gap: 15px; } nav a { margin: 0 8px; } .hero h1 { font-size: 32px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Mochimi</div>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#produk">Produk</a>
+      <a href="#tentang">Tentang</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="home">
+    <h1>Manisnya Setiap Gigitan</h1>
+    <p>Nikmati kelembutan mochi dengan rasa favoritmu.</p>
+    <a href="#produk"><button>Lihat Produk</button></a>
+  </section>
+
+  <section class="section" id="produk">
+    <h2>Menu Mochimi</h2>
+    <p id="status">Memuat produk...</p>
+    <div class="products" id="product-list"></div>
+  </section>
+
+  <section class="section" id="tentang">
+    <h2>Tentang Mochimi</h2>
+    <p style="text-align:center;max-width:650px;margin:auto;line-height:1.8">
+      Mochimi menghadirkan mochi daifuku dengan tekstur lembut dan isian yang nikmat.
+      Dibuat dengan bahan pilihan untuk menemani setiap momen manismu.
+    </p>
+  </section>
+
+  <footer>© 2026 Mochimi. Manisnya Setiap Gigitan.</footer>
+
+  <script>
+    const SUPABASE_URL = "https://sxiaipedapvmsjjvpkvt.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_1RzECM5HRplQ7yktp784vQ_Ohywt_88";
+
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function loadProducts() {
+      const status = document.getElementById("status");
+      const list = document.getElementById("product-list");
+
+      const { data, error } = await db
+        .from("products")
+        .select("id,name,category,price,image_url,stock,description")
+        .order("id");
+
+      if (error) {
+        status.textContent = "Produk belum dapat dimuat. Periksa koneksi database dan kebijakan akses.";
+        console.error(error);
+        return;
+      }
+
+      status.textContent = data.length ? "" : "Belum ada produk.";
+      list.innerHTML = data.map(product => `
+        <article class="product">
+          <img src="${escapeHTML(product.image_url || "")}" alt="${escapeHTML(product.name)}">
+          <h3>${escapeHTML(product.name)}</h3>
+          <p>${escapeHTML(product.description || "")}</p>
+          <p class="price">Rp${Number(product.price).toLocaleString("id-ID")}</p>
+          <p>Stok: ${Number(product.stock)}</p>
+        </article>
+      `).join("");
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      })[char]);
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
